@@ -30,6 +30,7 @@ class _AuthScreenState extends State<AuthScreen> {
         _usernameController.text.trim(),
         _passwordController.text,
       );
+      if (!mounted) return;
       if (!success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -46,6 +47,7 @@ class _AuthScreenState extends State<AuthScreen> {
         _selectedRole,
         _facultyController.text.trim(),
       );
+      if (!mounted) return;
       if (success) {
         setState(() => _isLogin = true);
         _usernameController.clear();
@@ -61,41 +63,54 @@ class _AuthScreenState extends State<AuthScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.background, // Elegant dynamic background
+      backgroundColor: theme.colorScheme.surface, // Elegant dynamic background
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 provider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
                 size: 16,
                 color: provider.isDarkMode ? const Color(0xFF818CF8) : const Color(0xFFD97706),
               ),
-              const SizedBox(width: 8),
-              Text(
-                provider.isDarkMode ? "Tema Malam" : "Tema Siang",
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onBackground,
+              const SizedBox(width: 6),
+              // Hide label text on very small screens to prevent overflow
+              LayoutBuilder(builder: (ctx, constraints) {
+                return MediaQuery.of(ctx).size.width > 360
+                    ? Text(
+                        provider.isDarkMode ? "Tema Malam" : "Tema Siang",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      )
+                    : const SizedBox.shrink();
+              }),
+              const SizedBox(width: 4),
+              Transform.scale(
+                scale: 0.85,
+                child: Switch(
+                  value: provider.isDarkMode,
+                  thumbColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) return const Color(0xFF818CF8);
+                    return const Color(0xFFD97706);
+                  }),
+                  trackColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) return const Color(0xFF4F46E5).withValues(alpha: 0.4);
+                    return Colors.black12;
+                  }),
+                  onChanged: (val) {
+                    provider.toggleTheme();
+                  },
                 ),
               ),
-              const SizedBox(width: 4),
-              Switch(
-                value: provider.isDarkMode,
-                activeColor: const Color(0xFF818CF8),
-                activeTrackColor: const Color(0xFF4F46E5).withOpacity(0.4),
-                inactiveThumbColor: const Color(0xFFD97706),
-                inactiveTrackColor: Colors.black12,
-                onChanged: (val) {
-                  provider.toggleTheme();
-                },
-              ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 8),
             ],
-          )
+          ),
         ],
       ),
       body: Center(
@@ -107,7 +122,7 @@ class _AuthScreenState extends State<AuthScreen> {
               color: theme.colorScheme.surface, // Adapts to theme surface
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
-                side: BorderSide(color: theme.colorScheme.onSurface.withOpacity(0.08)),
+                side: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.08)),
               ),
               elevation: 4,
               child: Padding(
@@ -134,12 +149,12 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(height: 6),
                       Center(
                         child: Text(
                           "Sistem Pemesanan Sarpras Real-Time",
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                         ),
                       ),
@@ -220,9 +235,10 @@ class _AuthScreenState extends State<AuthScreen> {
 
                         // Role Selector Form fields
                         DropdownButtonFormField<String>(
-                          value: _selectedRole,
+                          initialValue: _selectedRole,
+                          isExpanded: true,
                           dropdownColor: Colors.white,
-                          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 14),
                           decoration: _buildInputDecoration(
                             labelText: "Jabatan Peran",
                             icon: Icons.school_outlined,
@@ -235,7 +251,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           ],
                           onChanged: (v) => setState(() => _selectedRole = v!),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
 
                         // Faculty / Dept Input
                         TextFormField(
@@ -273,9 +289,9 @@ class _AuthScreenState extends State<AuthScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.onSurface.withOpacity(0.04),
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
                             borderRadius: BorderRadius.circular(12),
-                            border: BorderSide(color: theme.colorScheme.onSurface.withOpacity(0.08)),
+                            border: Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.08)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,7 +302,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                   const SizedBox(width: 6),
                                   Text(
                                     "Kredensial Demo SQLite Intern:",
-                                    style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 12, fontWeight: FontWeight.bold),
+                                    style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 10, fontWeight: FontWeight.bold),
                                   ),
                                 ],
                               ),
@@ -316,7 +332,7 @@ class _AuthScreenState extends State<AuthScreen> {
         text: TextSpan(
           style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface),
           children: [
-            TextSpan(text: "$label ", style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.6))),
+            TextSpan(text: "$label ", style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
             TextSpan(text: u, style: const TextStyle(color: Color(0xFFC2410C), fontWeight: FontWeight.bold)),
             const TextSpan(text: " / "),
             TextSpan(text: p, style: TextStyle(color: theme.colorScheme.onSurface, fontStyle: FontStyle.italic)),
@@ -337,7 +353,7 @@ class _AuthScreenState extends State<AuthScreen> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.black.withOpacity(0.15)),
+        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.15)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

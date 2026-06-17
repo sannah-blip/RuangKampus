@@ -204,7 +204,7 @@ class RuangKampusProvider extends ChangeNotifier {
             if (unoverrideable.isNotEmpty) {
               return {
                 "success": false,
-                "message": "Slot waktu sudah dipesan oleh sesama Dosen atau Admin (${unoverrideable.first().userName})."
+                "message": "Slot waktu sudah dipesan oleh sesama Dosen atau Admin (${unoverrideable.first.userName})."
               };
             }
 
@@ -222,7 +222,7 @@ class RuangKampusProvider extends ChangeNotifier {
           default: // student
             return {
               "success": false,
-              "message": "Waktu ini sudah dipesan oleh ${activeConflicts.first().userName} (${activeConflicts.first().userRole})."
+              "message": "Waktu ini sudah dipesan oleh ${activeConflicts.first.userName} (${activeConflicts.first.userName})."
             };
         }
       }

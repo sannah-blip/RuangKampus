@@ -55,20 +55,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         actions: [
-          // Live telemetry IoT synchronizer simulation pulse
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: Row(
-              children: [
-                _buildSyncIndicator(),
-                const SizedBox(width: 8),
-                Text(
-                  "SQLite Cloud Sync",
-                  style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.6), fontSize: 11),
-                ),
-              ],
+          // Live sync indicator — hide text label on small screens to avoid overflow
+          if (MediaQuery.of(context).size.width > 400)
+            Padding(
+              padding: const EdgeInsets.only(right: 4.0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildSyncIndicator(),
+                  const SizedBox(width: 6),
+                  Text(
+                    "SQLite Sync",
+                    style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.6), fontSize: 11),
+                  ),
+                ],
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.only(right: 4.0),
+              child: _buildSyncIndicator(),
             ),
-          ),
           IconButton(
             icon: Icon(
               provider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
@@ -87,7 +94,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               provider.logout();
             },
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
         ],
       ),
       body: Row(
@@ -97,10 +104,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
             NavigationRail(
               backgroundColor: theme.colorScheme.surface,
               selectedIndex: _currentTab,
-              unselectedIconTheme: const IconThemeData(color: Colors.black45),
+              unselectedIconTheme: IconThemeData(
+                color: theme.colorScheme.onSurface.withOpacity(0.45),
+              ),
               selectedIconTheme: IconThemeData(color: theme.colorScheme.primary),
-              unselectedLabelTextStyle: const TextStyle(color: Colors.black45, fontSize: 11),
-              selectedLabelTextStyle: TextStyle(color: theme.colorScheme.primary, fontSize: 11, fontWeight: FontWeight.bold),
+              unselectedLabelTextStyle: TextStyle(
+                color: theme.colorScheme.onSurface.withOpacity(0.45),
+                fontSize: 11,
+              ),
+              selectedLabelTextStyle: TextStyle(
+                color: theme.colorScheme.primary,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
               labelType: NavigationRailLabelType.all,
               destinations: const [
                 NavigationRailDestination(
@@ -147,7 +163,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               backgroundColor: theme.colorScheme.surface,
               currentIndex: _currentTab,
               selectedItemColor: theme.colorScheme.primary,
-              unselectedItemColor: Colors.black45,
+              unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.45),
               selectedFontSize: 11,
               unselectedFontSize: 11,
               items: const [
@@ -239,7 +255,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       decoration: BoxDecoration(
         color: badgeColor.withOpacity(0.12),
         borderRadius: BorderRadius.circular(20),
-        border: BorderSide(color: badgeColor.withOpacity(0.3)),
+        border: Border.all(color: badgeColor.withOpacity(0.3)),
       ),
       child: Text(
         role.toUpperCase(),
@@ -313,15 +329,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              // Segment Filter Chips
-              Row(
-                children: [
-                  _buildTypeChip(provider, "ALL", "Semua Fasilitas"),
-                  const SizedBox(width: 8),
-                  _buildTypeChip(provider, "ROOM", "Ruangan Kelas"),
-                  const SizedBox(width: 8),
-                  _buildTypeChip(provider, "DESK", "Meja Belajar"),
-                ],
+              // Segment Filter Chips — scrollable to prevent overflow on narrow screens
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildTypeChip(provider, "ALL", "Semua Fasilitas"),
+                    const SizedBox(width: 8),
+                    _buildTypeChip(provider, "ROOM", "Ruangan Kelas"),
+                    const SizedBox(width: 8),
+                    _buildTypeChip(provider, "DESK", "Meja Belajar"),
+                  ],
+                ),
               ),
             ],
           ),
@@ -457,7 +476,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   decoration: BoxDecoration(
                     color: theme.colorScheme.onSurface.withOpacity(0.04),
                     borderRadius: BorderRadius.circular(6),
-                    border: BorderSide(color: theme.colorScheme.onSurface.withOpacity(0.08)),
+                    border: Border.all(color: theme.colorScheme.onSurface.withOpacity(0.08)),
                   ),
                   child: Text(
                     f,
@@ -499,33 +518,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Divider(color: theme.colorScheme.onSurface.withOpacity(0.08), height: 24),
 
             // Actions panel based on user login role
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // ADMIN room deletion
-                if (isAdmin) ...[
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
-                    tooltip: "Hapus Sarpras Permanen",
-                    onPressed: () => _confirmDeleteRoom(context, provider, room),
+            // Use Column on mobile (admin) to prevent Row overflow
+            if (isAdmin)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Admin controls row: delete + maintenance toggle
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
+                        tooltip: "Hapus Sarpras Permanen",
+                        onPressed: () => _confirmDeleteRoom(context, provider, room),
+                      ),
+                      Text(
+                        "Maintenance",
+                        style: TextStyle(
+                          color: room.isUnderMaintenance ? Colors.red : theme.colorScheme.onSurface.withOpacity(0.5),
+                          fontSize: 11,
+                        ),
+                      ),
+                      const Spacer(),
+                      Transform.scale(
+                        scale: 0.9,
+                        child: Switch(
+                          value: room.isUnderMaintenance,
+                          activeColor: Colors.redAccent,
+                          onChanged: (state) {
+                            provider.updateMaintenanceStatus(room, state);
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                  // Toggle maintenance mode switches
-                  Text(
-                    "Maint.",
-                    style: TextStyle(color: room.isUnderMaintenance ? Colors.red : theme.colorScheme.onSurface.withOpacity(0.5), fontSize: 11),
+                  const SizedBox(height: 6),
+                  // Booking button full-width on mobile for admin
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: room.isUnderMaintenance
+                          ? (provider.isDarkMode ? Colors.white12 : Colors.black12)
+                          : theme.colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    onPressed: () => _showBookingDialog(context, provider, room),
+                    icon: const Icon(Icons.bookmark_add_outlined, size: 14),
+                    label: const Text("Pesan Slot", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
-                  Switch(
-                    value: room.isUnderMaintenance,
-                    activeColor: Colors.redAccent,
-                    onChanged: (state) {
-                      provider.updateMaintenanceStatus(room, state);
-                    },
-                  ),
-                  const SizedBox(width: 8),
                 ],
-
-                // Action booking triggers button matching Kotlin rules
-                ElevatedButton.icon(
+              )
+            else
+              // Non-admin: single booking button aligned right
+              Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: room.isUnderMaintenance
                         ? (provider.isDarkMode ? Colors.white12 : Colors.black12)
@@ -534,14 +581,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
-                  onPressed: room.isUnderMaintenance && !isAdmin
+                  onPressed: room.isUnderMaintenance
                       ? null
                       : () => _showBookingDialog(context, provider, room),
                   icon: const Icon(Icons.bookmark_add_outlined, size: 14),
                   label: const Text("Pesan Slot", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                 ),
-              ],
-            ),
+              ),
           ],
         ),
       ),
@@ -563,7 +609,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
-              border: BorderSide(color: theme.colorScheme.onSurface.withOpacity(0.08)),
+              border: Border.all(color: theme.colorScheme.onSurface.withOpacity(0.08)),
             ),
             child: Row(
               children: [
