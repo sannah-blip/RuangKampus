@@ -1,8 +1,0 @@
-{
-  "name": "RuangKampus",
-  "description": "Aplikasi manajemen ketersediaan meja belajar dan ruangan kosong di kampus secara real-time dengan fitur pemesanan tempat, notifikasi, kalender, dan laporan PDF.",
-  "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
-}
